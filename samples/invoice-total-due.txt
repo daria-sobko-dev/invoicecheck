@@ -1,0 +1,26 @@
+INVOICE
+
+Invoice No: INV-2026-0185
+Date: 2026-09-05
+
+From:
+Pacific Cloud Services Inc.
+500 Market Street, San Francisco, CA 94105, USA
+
+Bill To:
+Acme Consulting Ltd
+
+Description                      Amount (USD)
+---------------------------------------------
+Cloud hosting, September               600.00
+Backup storage 500 GB                  150.00
+Priority support                        92.00
+---------------------------------------------
+
+Notes:
+- Prices are valid for orders placed before 2026-10-01.
+- A late fee of 25.00 USD applies after 30 days.
+- Previous invoice INV-2026-0120 (310.00 USD) is already paid.
+- Thank you for being our customer since 2021.
+
+Total due: 842.00 USD

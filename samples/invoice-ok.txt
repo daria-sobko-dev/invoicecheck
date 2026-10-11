@@ -1,0 +1,21 @@
+INVOICE
+
+Invoice No: INV-2026-0142
+Date: 2026-09-15
+
+From:
+Nordic Office Supplies GmbH
+Hauptstrasse 12, 10115 Berlin, Germany
+
+Bill To:
+Acme Consulting Ltd
+
+Description                      Amount
+----------------------------------------
+Ergonomic office chair x2        480.00
+Standing desk                    650.00
+Monitor arm                       95.50
+----------------------------------------
+TOTAL (EUR)                     1225.50
+
+Payment due within 30 days.

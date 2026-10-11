@@ -1,0 +1,21 @@
+INVOICE
+
+Invoice No: INV-2026-0171
+Date: 12 March 2026
+
+From:
+Baltic Print Studio OU
+Narva mnt 7, 10117 Tallinn, Estonia
+
+Bill To:
+Acme Consulting Ltd
+
+Description                      Amount
+----------------------------------------
+Business cards (500 pcs)         120.00
+Flyers A5 (1000 pcs)             340.00
+Design work, 4 hours             280.00
+----------------------------------------
+TOTAL (EUR)                      740.00
+
+Payment due within 14 days.

@@ -1,0 +1,21 @@
+INVOICE
+
+Invoice No: INV-2026-0157
+Date: 2026-09-22
+
+From:
+Bright Pixel Design Studio
+Rue de la Paix 8, 75002 Paris, France
+
+Bill To:
+Acme Consulting Ltd
+
+Description                      Amount
+----------------------------------------
+Logo design                      800.00
+Business card layout             150.00
+Brand guidelines document        420.00
+----------------------------------------
+TOTAL (EUR)                     1470.00
+
+Thank you for your business!

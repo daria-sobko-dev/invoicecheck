@@ -1,0 +1,45 @@
+// InvoiceCheck database schema.
+// After changes: npx prisma migrate dev --name <what-changed>
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// One processed PDF file and the result of its check.
+model Document {
+  id          Int         @id @default(autoincrement())
+  fileName    String
+  fileHash    String      @unique // fingerprint of the file content, used to find duplicates
+  status      String // "ok" or "needs_review"
+  extracted   Json? // invoice data; null if extraction failed
+  explanation String? // explanation of problems from Reconciler; null if there are no problems
+  createdAt   DateTime    @default(now())
+  violations  Violation[]
+  agentRuns   AgentRun[]
+}
+
+// One problem a rule found in the document.
+model Violation {
+  id         Int      @id @default(autoincrement())
+  documentId Int
+  document   Document @relation(fields: [documentId], references: [id])
+  rule       String // rule name, for example "totalMatchesLineItems"
+  message    String
+}
+
+// One step of an AI agent's work: what it was given and what it returned.
+model AgentRun {
+  id         Int      @id @default(autoincrement())
+  documentId Int
+  document   Document @relation(fields: [documentId], references: [id])
+  agent      String // step name, for example "extract"
+  model      String
+  input      Json
+  output     Json
+  createdAt  DateTime @default(now())
+}

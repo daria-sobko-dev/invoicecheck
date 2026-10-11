@@ -1,0 +1,20 @@
+RECHNUNG / INVOICE
+
+Rechnungsnummer / Invoice No: INV-2026-0178
+Datum / Date: 30.08.2026
+
+Von / From:
+Rheinland Moebel GmbH
+Koenigsallee 21, 40212 Duesseldorf, Germany
+
+An / Bill To:
+Acme Consulting Ltd
+
+Beschreibung / Description          Betrag
+--------------------------------------------
+Konferenztisch / Conference table   890,00 €
+Buerostuehle x3 / Office chairs x3  335,50 €
+--------------------------------------------
+Gesamtbetrag / Total              1.225,50 €
+
+Zahlbar innerhalb von 30 Tagen.

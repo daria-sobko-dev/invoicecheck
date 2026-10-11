@@ -1,0 +1,18 @@
+INVOICE
+
+Invoice No: INV-2026-0163
+
+From:
+CloudHost Solutions BV
+Keizersgracht 100, 1015 Amsterdam, Netherlands
+
+Bill To:
+Acme Consulting Ltd
+
+Description                      Amount
+----------------------------------------
+Web hosting (annual plan)        240.00
+Domain renewal                    15.00
+SSL certificate                   60.00
+----------------------------------------
+TOTAL (EUR)                      315.00

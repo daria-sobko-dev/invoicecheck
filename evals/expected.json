@@ -1,0 +1,66 @@
+{
+  "invoice-ok.pdf": {
+    "status": "ok",
+    "invoiceNumber": "INV-2026-0142",
+    "total": 1225.5,
+    "currency": "EUR",
+    "date": "2026-09-15",
+    "rules": []
+  },
+  "invoice-bad-total.pdf": {
+    "status": "needs_review",
+    "invoiceNumber": "INV-2026-0157",
+    "total": 1470,
+    "currency": "EUR",
+    "date": "2026-09-22",
+    "rules": ["totalMatchesLineItems"]
+  },
+  "invoice-no-date.pdf": {
+    "status": "needs_review",
+    "invoiceNumber": "INV-2026-0163",
+    "total": 315,
+    "currency": "EUR",
+    "date": null,
+    "rules": ["dateIsPresent"]
+  },
+  "invoice-date-words.pdf": {
+    "status": "ok",
+    "invoiceNumber": "INV-2026-0171",
+    "total": 740,
+    "currency": "EUR",
+    "date": "2026-03-12",
+    "rules": []
+  },
+  "invoice-eu-format.pdf": {
+    "status": "ok",
+    "invoiceNumber": "INV-2026-0178",
+    "total": 1225.5,
+    "currency": "EUR",
+    "date": "2026-08-30",
+    "rules": []
+  },
+  "invoice-total-due.pdf": {
+    "status": "ok",
+    "invoiceNumber": "INV-2026-0185",
+    "total": 842,
+    "currency": "USD",
+    "date": "2026-09-05",
+    "rules": []
+  },
+  "scan.pdf": {
+    "status": "needs_review",
+    "invoiceNumber": null,
+    "total": null,
+    "currency": null,
+    "date": null,
+    "rules": ["pdfHasText"]
+  },
+  "statement.pdf": {
+    "status": "needs_review",
+    "invoiceNumber": null,
+    "total": null,
+    "currency": null,
+    "date": null,
+    "rules": ["documentType"]
+  }
+}

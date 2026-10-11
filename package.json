@@ -1,0 +1,51 @@
+{
+  "name": "invoicecheck",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "start": "tsx src/index.ts",
+    "make-pdfs": "tsx src/make-pdfs.ts",
+    "reset": "tsx src/reset.ts",
+    "enqueue": "tsx src/enqueue.ts",
+    "worker": "tsx src/worker.ts",
+    "failed": "tsx src/failed.ts",
+    "eval": "tsx src/eval.ts",
+    "api": "tsx src/api/server.ts",
+    "client": "tsx src/client.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^2.28.0",
+    "@langfuse/client": "^5.11.1",
+    "@langfuse/otel": "^5.11.1",
+    "@langfuse/tracing": "^5.11.1",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/core": "^2.12.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
+    "@opentelemetry/sdk-node": "^0.222.0",
+    "@opentelemetry/sdk-trace-base": "^2.12.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "@trpc/client": "^11.18.0",
+    "@trpc/server": "^11.18.0",
+    "bullmq": "^6.3.12",
+    "dotenv": "^18.0.7",
+    "ioredis": "^6.0.0",
+    "pdf-parse": "^2.4.5",
+    "pdfkit": "^0.20.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/pdfkit": "^0.17.6",
+    "prisma": "^7.10.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}

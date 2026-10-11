@@ -1,0 +1,17 @@
+NORTHBRIDGE BANK PLC
+Account Statement
+
+Account holder: Acme Consulting Ltd
+Account number: GB29 NWBK 6016 1331 9268 19
+Period: 2026-09-01 to 2026-09-30
+Currency: EUR
+
+Date        Description                      Amount     Balance
+---------------------------------------------------------------
+2026-09-01  Opening balance                              8,420.00
+2026-09-03  Client payment - Orion Ltd     +3,200.00   11,620.00
+2026-09-10  Nordic Office Supplies GmbH    -1,225.50   10,394.50
+2026-09-18  CloudHost hosting fee            -315.00   10,079.50
+2026-09-30  Account maintenance fee           -12.00   10,067.50
+---------------------------------------------------------------
+Closing balance                                        10,067.50

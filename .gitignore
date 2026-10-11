@@ -1,0 +1,22 @@
+node_modules
+
+# Secrets: only .env.example is published
+.env
+.env.*
+!.env.example
+
+# Local data and generated code
+cache
+storage
+/src/generated
+
+# Logs
+*.log
+logs
+
+# macOS
+.DS_Store
+
+# Personal Claude Code settings (not published)
+CLAUDE.md
+.claude
