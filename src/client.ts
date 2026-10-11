@@ -55,6 +55,12 @@ try {
       break;
     }
 
+    if (doc.state === "duplicate") {
+      const original = doc.duplicateOf;
+      console.log(`\nduplicate: the same invoice is already saved as ${original.fileName} [${original.hash.slice(0, 8)}], not saved again`);
+      break;
+    }
+
     // Still in the queue: print the state only when it changes.
     const status = `${doc.jobStatus}, attempts: ${doc.attemptsMade}`;
     if (status !== lastStatus) {

@@ -16,6 +16,19 @@ export const InvoiceJobSchema = z.object({
 });
 export type InvoiceJob = z.infer<typeof InvoiceJobSchema>;
 
+// What a finished job returns. BullMQ keeps it in Redis, and the API reads it back
+// to tell the client what happened, so it is checked with this schema there too.
+export const JobResultSchema = z.discriminatedUnion("outcome", [
+  z.object({ outcome: z.literal("saved"), documentId: z.number().int(), status: z.string() }),
+  z.object({ outcome: z.literal("already_processed"), documentId: z.number().int() }),
+  // Same invoiceNumber and vendor as an existing document, but another file: not saved.
+  z.object({
+    outcome: z.literal("duplicate"),
+    duplicateOf: z.object({ id: z.number().int(), fileHash: z.string(), fileName: z.string() }),
+  }),
+]);
+export type JobResult = z.infer<typeof JobResultSchema>;
+
 const redisUrl = process.env.REDIS_URL;
 if (!redisUrl) {
   throw new Error("REDIS_URL not found in .env");
@@ -25,7 +38,7 @@ if (!redisUrl) {
 // instead of throwing an error if Redis disappears for a second.
 export const redis = new Redis(redisUrl, { maxRetriesPerRequest: null });
 
-export const invoiceQueue = new Queue<InvoiceJob, string>(QUEUE_NAME, {
+export const invoiceQueue = new Queue<InvoiceJob, JobResult>(QUEUE_NAME, {
   connection: redis,
   defaultJobOptions: {
     attempts: 3, // total attempts per job

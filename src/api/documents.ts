@@ -3,7 +3,7 @@ import path from "node:path";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { hashBytes, prisma } from "../db.js";
-import { invoiceQueue } from "../queue.js";
+import { invoiceQueue, JobResultSchema } from "../queue.js";
 import { InvoiceSchema } from "../schema.js";
 import { protectedProcedure, router } from "./trpc.js";
 
@@ -104,6 +104,12 @@ const GetByHashOutput = z.discriminatedUnion("state", [
     explanation: z.string().nullable(),
     agents: z.array(AgentSummary),
   }),
+  // The worker found the same invoice (invoiceNumber + vendor) under another file and did not save it.
+  z.object({
+    state: z.literal("duplicate"),
+    hash: HashSchema,
+    duplicateOf: z.object({ hash: HashSchema, fileName: z.string() }),
+  }),
 ]);
 
 const getByHash = protectedProcedure
@@ -138,6 +144,12 @@ const getByHash = protectedProcedure
     }
     const state = await job.getState();
     if (state === "completed") {
+      // The return value comes from Redis, so we check it with the schema like any other outside data.
+      const result = JobResultSchema.safeParse(job.returnvalue);
+      if (result.success && result.data.outcome === "duplicate") {
+        const { fileHash, fileName } = result.data.duplicateOf;
+        return { state: "duplicate" as const, hash: input.hash, duplicateOf: { hash: fileHash, fileName } };
+      }
       // The job finished but the document is not in the database (for example, the database was cleared separately).
       throw new TRPCError({ code: "NOT_FOUND", message: "job is completed but the document is not in the database" });
     }

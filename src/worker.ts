@@ -3,7 +3,7 @@ import { shutdownTracing } from "./observability.js";
 import { UnrecoverableError, Worker, type Job } from "bullmq";
 import { fileHash, prisma, saveDocument } from "./db.js";
 import { analyzeFile } from "./document.js";
-import { closeQueue, InvoiceJobSchema, QUEUE_NAME, redis, shortId, type InvoiceJob } from "./queue.js";
+import { closeQueue, InvoiceJobSchema, QUEUE_NAME, redis, shortId, type InvoiceJob, type JobResult } from "./queue.js";
 
 // Worker: takes jobs from the queue one at a time and processes them.
 
@@ -11,10 +11,10 @@ function time(): string {
   return new Date().toLocaleTimeString("ru-RU");
 }
 
-// Returns the result for the "completed: ..." line.
+// Returns the job result (see JobResultSchema), also printed in the "completed: ..." line.
 // Throwing Error means "temporary error, try again later".
 // Throwing UnrecoverableError means "a retry will not help, go straight to failed".
-async function processJob(job: Job<InvoiceJob, string>): Promise<string> {
+async function processJob(job: Job<InvoiceJob, JobResult>): Promise<JobResult> {
   const parsed = InvoiceJobSchema.safeParse(job.data);
   if (!parsed.success) {
     throw new UnrecoverableError(`bad job data: ${parsed.error.issues[0]?.message}`);
@@ -27,7 +27,7 @@ async function processJob(job: Job<InvoiceJob, string>): Promise<string> {
   const hash = await fileHash(filePath);
   const existing = await prisma.document.findUnique({ where: { fileHash: hash } });
   if (existing !== null) {
-    return `already processed (document #${existing.id})`;
+    return { outcome: "already_processed", documentId: existing.id };
   }
 
   // Step 1: PDF -> text -> agents -> rules (one trace in Langfuse).
@@ -42,19 +42,31 @@ async function processJob(job: Job<InvoiceJob, string>): Promise<string> {
     throw new UnrecoverableError(problem.message);
   }
 
-  // Step 2: save to the database.
-  await saveDocument({ fileName, fileHash: hash, ...result });
-  return result.status;
+  // Step 2: save to the database, unless the same invoice is already there under another file.
+  const saved = await saveDocument({ fileName, fileHash: hash, ...result });
+  if (!saved.saved) return { outcome: "duplicate", duplicateOf: saved.duplicateOf };
+  return { outcome: "saved", documentId: saved.documentId, status: result.status };
 }
 
-const worker = new Worker<InvoiceJob, string>(QUEUE_NAME, processJob, {
+function describeResult(result: JobResult): string {
+  switch (result.outcome) {
+    case "saved":
+      return `${result.status} (document #${result.documentId})`;
+    case "already_processed":
+      return `already processed (document #${result.documentId})`;
+    case "duplicate":
+      return `duplicate of document #${result.duplicateOf.id} (${result.duplicateOf.fileName}), not saved`;
+  }
+}
+
+const worker = new Worker<InvoiceJob, JobResult>(QUEUE_NAME, processJob, {
   connection: redis,
   concurrency: 1, // one job at a time
   limiter: { max: 4, duration: 60_000 }, // no more than 4 jobs per minute
 });
 
 worker.on("completed", (job, result) => {
-  console.log(`  [${shortId(job.id)}] completed: ${result}`);
+  console.log(`  [${shortId(job.id)}] completed: ${describeResult(result)}`);
 });
 
 worker.on("failed", (job, err) => {

@@ -18,9 +18,15 @@ model Document {
   status      String // "ok" or "needs_review"
   extracted   Json? // invoice data; null if extraction failed
   explanation String? // explanation of problems from Reconciler; null if there are no problems
+  // Business key, copied from extracted: the same invoice keeps its number and vendor
+  // even when the PDF bytes (and fileHash) change. NULLs never collide in Postgres.
+  invoiceNumber String?
+  vendor        String?
   createdAt   DateTime    @default(now())
   violations  Violation[]
   agentRuns   AgentRun[]
+
+  @@unique([invoiceNumber, vendor])
 }
 
 // One problem a rule found in the document.

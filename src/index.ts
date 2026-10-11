@@ -40,7 +40,11 @@ try {
 
     // Step 2: print and save to the database.
     printResult(result);
-    await saveDocument({ fileName: path.basename(file), fileHash: hash, ...result });
+    const saved = await saveDocument({ fileName: path.basename(file), fileHash: hash, ...result });
+    if (!saved.saved) {
+      const { id, fileName } = saved.duplicateOf;
+      console.log(`  duplicate of document #${id} (${fileName}): same invoice number and vendor, not saved`);
+    }
   }
 } finally {
   // Close the database connection, otherwise the program will not exit by itself.
