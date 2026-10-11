@@ -1,11 +1,12 @@
 import { rm } from "node:fs/promises";
 import { TRPCError } from "@trpc/server";
+import { Worker } from "bullmq";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { MAX_FILE_BYTES } from "../src/api/documents.js";
 import { appRouter } from "../src/api/router.js";
 import { createCallerFactory } from "../src/api/trpc.js";
 import { hashBytes, prisma } from "../src/db.js";
-import { closeQueue, invoiceQueue, QUEUE_NAME } from "../src/queue.js";
+import { closeQueue, invoiceQueue, QUEUE_NAME, redis, type InvoiceJob, type JobResult } from "../src/queue.js";
 
 // API tests without HTTP and without Gemini: procedures are called directly via createCaller.
 // Postgres and Redis must be running (docker compose up -d).
@@ -19,6 +20,9 @@ const wrongKey = createCaller({ apiKey: "wrong" });
 // A tiny "PDF": a correct file start is enough to test the API.
 const fakePdf = Buffer.from("%PDF-1.4\n% InvoiceCheck API test file\n%%EOF\n");
 const fakePdfHash = hashBytes(fakePdf);
+// Another tiny "PDF" that the stub worker below reports as a duplicate of fakePdf.
+const duplicatePdf = Buffer.from("%PDF-1.4\n% InvoiceCheck duplicate test file\n%%EOF\n");
+const duplicatePdfHash = hashBytes(duplicatePdf);
 const asBase64 = (bytes: Buffer): string => bytes.toString("base64");
 
 // tRPC error code, or "no error" if there was no error.
@@ -41,6 +45,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await invoiceQueue.obliterate({ force: true });
   await rm(`storage/uploads/${fakePdfHash}.pdf`, { force: true });
+  await rm(`storage/uploads/${duplicatePdfHash}.pdf`, { force: true });
   await closeQueue();
   await prisma.$disconnect();
 });
@@ -126,5 +131,41 @@ describe("documents.list", () => {
 describe("Gemini protection in tests", () => {
   it("model call code does not load without a key", async () => {
     await expect(import("../src/agents/llm.js")).rejects.toThrow("GEMINI_API_KEY");
+  });
+});
+
+describe("re-uploading a duplicate", () => {
+  it("a file that was found to be a duplicate: upload answers duplicate, not already_in_queue", async () => {
+    // Start from an empty test queue, so the stub worker only gets the job of this test.
+    await invoiceQueue.obliterate({ force: true });
+
+    // The stub worker stands in for the real one (no Gemini): it reports every job as a duplicate.
+    const result: JobResult = {
+      outcome: "duplicate",
+      duplicateOf: { id: 1, fileHash: fakePdfHash, fileName: "original.pdf" },
+    };
+    const worker = new Worker<InvoiceJob, JobResult>(QUEUE_NAME, async () => result, { connection: redis });
+    try {
+      const input = { fileName: "copy.pdf", contentBase64: asBase64(duplicatePdf) };
+      expect(await api.documents.upload(input)).toEqual({ hash: duplicatePdfHash, status: "queued" });
+
+      // Wait until the stub worker has finished the job (at most 10 seconds).
+      const job = await invoiceQueue.getJob(duplicatePdfHash);
+      const startedAt = Date.now();
+      while ((await job?.getState()) !== "completed" && Date.now() - startedAt < 10_000) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      expect(await job?.getState()).toBe("completed");
+
+      // The same file again: the answer is duplicate right away.
+      expect(await api.documents.upload(input)).toEqual({ hash: duplicatePdfHash, status: "duplicate" });
+      expect(await api.documents.getByHash({ hash: duplicatePdfHash })).toEqual({
+        state: "duplicate",
+        hash: duplicatePdfHash,
+        duplicateOf: { hash: fakePdfHash, fileName: "original.pdf" },
+      });
+    } finally {
+      await worker.close();
+    }
   });
 });

@@ -24,7 +24,7 @@ const UploadInput = z.object({
 });
 const UploadOutput = z.object({
   hash: HashSchema,
-  status: z.enum(["queued", "already_processed", "already_in_queue"]),
+  status: z.enum(["queued", "already_processed", "already_in_queue", "duplicate"]),
 });
 
 // base64 is a way to write file bytes as ordinary letters so they can be sent in JSON.
@@ -37,6 +37,12 @@ function decodeBase64(text: string): Buffer {
     throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "file is larger than 5 MB" });
   }
   return Buffer.from(text, "base64");
+}
+
+// The job result comes from Redis, so we check it with the schema like any other outside data.
+function isDuplicateResult(returnValue: unknown): boolean {
+  const result = JobResultSchema.safeParse(returnValue);
+  return result.success && result.data.outcome === "duplicate";
 }
 
 const upload = protectedProcedure
@@ -61,9 +67,14 @@ const upload = protectedProcedure
     // Already in the queue? Resend a failed job, leave the others alone.
     const job = await invoiceQueue.getJob(hash);
     if (job !== undefined) {
-      if ((await job.getState()) === "failed") {
+      const state = await job.getState();
+      if (state === "failed") {
         await job.retry("failed", { resetAttemptsMade: true, resetAttemptsStarted: true });
         return { hash, status: "queued" as const };
+      }
+      // Finished earlier as a duplicate: this file was never saved, but the job remembers why.
+      if (state === "completed" && isDuplicateResult(job.returnvalue)) {
+        return { hash, status: "duplicate" as const };
       }
       return { hash, status: "already_in_queue" as const };
     }
